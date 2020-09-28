@@ -1,0 +1,110 @@
+---
+title: "individual1.Rmd"
+author: "Elisabeth Balke"
+date: "9/28/2020"
+output: html_document
+---
+
+```{r}
+dat <- readxl::read_xls('../ds202_lab3/GSS.xls')
+
+library(dplyr)
+library(ggpubr)
+library(ggplot2)
+
+dat  <- na.omit(dat)
+colnames(dat) <- c('Year', 'ID', 'Marital_Status', 'HS_Level', 'Gender', 'Political', 'Happy', 'Ballot_Used')
+colnames(dat)
+```
+
+**QUESTION 1**
+```{r}
+dat$HS_Level <- as.numeric(dat$HS_Level)
+dat$Political<- as.factor(dat$Political)
+dat$Marital_Status<- as.factor(dat$Marital_Status)
+dat$Gender<- as.factor(dat$Gender)
+dat$Happy<- as.factor(dat$Happy)
+dat$Ballot_Used<- as.factor(dat$Ballot_Used)
+
+dat<-na.omit(dat)
+
+dat %>% 
+  group_by(Political) %>% 
+  summarize(mean_HS_Level = mean(HS_Level)) %>% 
+  arrange(mean_HS_Level)
+```
+
+**QUESTION 2**
+```{r}
+datNew <- dat %>% group_by(Political) %>% filter(HS_Level > median(HS_Level))
+str(datNew)
+```
+
+**QUESTION 3**
+```{r}
+datHappy <- dat %>% 
+  filter(Happy == "Very happy" | Happy == "Pretty happy")
+
+ggplot(datHappy, aes(x=Marital_Status, fill = Happy)) + geom_bar()
+# Those that are married are more happy than others. Those never married are happier than divorced, Seperated or widowed.
+```
+
+**QUESTION 4**
+```{r}
+datRep <- dat %>%
+  filter(Political == 'Not str republican' | 
+           Political == 'Strong republican' | 
+           Political == 'Ind,near rep')
+datDem <- dat %>%
+  filter(Political == 'Strong democrat' |
+           Political == 'Not str democrat' |
+           Political == 'Ind,near dem')
+
+ggplot(datRep, aes(x=Marital_Status, fill=Happy)) + geom_bar()
+ggplot(datDem, aes(x=Marital_Status, fill=Happy)) + geom_bar()
+#There is a larger population of married Democrats than married Republicans. Married Republicans & Never married Republicans are less happy than Democrat peers.
+```
+
+**QUESTION 5**
+```{r}
+dat %>% 
+  group_by(Marital_Status)%>% 
+  summarize(mean_HS_Level = mean(HS_Level)) %>% 
+  arrange(mean_HS_Level)
+
+datStatusEduc <-dat %>% 
+  group_by(Marital_Status) %>% 
+  summarize(mean_HS_Level = mean(HS_Level)) %>% 
+  arrange(mean_HS_Level)
+
+ggplot(datStatusEduc, aes(x=Marital_Status, y=mean_HS_Level)) + geom_col()
+# Those who are Married, Divorced, or Never married have more years of education, generally, when compared to the Widowed and seperated.
+```
+
+**QUESTION 6A**
+```{r}
+#Question 6A: What is the relationship between happiness and education level?
+EducHappy <- dat %>%
+  filter(Happy == 'Pretty happy' | Happy == 'Very happy')
+
+EducHappy %>%
+  group_by(Happy) %>%
+  arrange(HS_Level)
+
+ggplot(EducHappy, aes(x=HS_Level, fill=Happy))+ geom_bar()
+#On average, happiness increases with education levels until the 16th year of education, when a trending decline in happiness begins.
+```
+
+**QUESTION 6B**
+```{r}
+#Question 6B: Is there an observable trend in happiness levels based on year?
+YearHappy <- dat %>%
+  filter(Happy == 'Pretty happy' | Happy == 'Very happy')
+  
+YearHappy %>%
+  group_by(Happy)%>%
+  arrange(Year)
+
+ggplot(YearHappy, aes(x=Year, fill=Happy)) + geom_bar()
+#In 1994, happiness levels spiked until 2000. Then again spiked in 2006 followed by a drop in 2008. Overall, levels were similar from 1972 - 1993, then happiness began to increase.
+```
